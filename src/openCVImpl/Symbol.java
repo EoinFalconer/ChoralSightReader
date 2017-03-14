@@ -117,7 +117,7 @@ public class Symbol {
 								currentScore.symbolImage.setRGB(startX + i + k, startY + j, Color.GREEN.getRGB());
 							}*/
 							
-							if((blackAbove + blackBelow) >= (currentScore.spaceHeight*0.8) && (blackLeft + blackRight) > (currentScore.spaceHeight) /*&& (blackLeft + blackRight) < (currentScore.spaceHeight)*/){
+							if((blackAbove + blackBelow) >= (currentScore.spaceHeight*0.8) && (blackLeft + blackRight) > (currentScore.spaceHeight) && (blackLeft + blackRight) < (currentScore.spaceHeight * 2)){
 								potentialWholeNotes.add(new Pixel(startX + i,startY + j, true));
 								currentScore.symbolImage.setRGB(startX + i, startY + j, Color.CYAN.getRGB());
 	
@@ -155,7 +155,7 @@ public class Symbol {
 				for(int j=0;j<accepted.size();j++){
 						if(((Math.abs(potentialWholeNotes.get(i).getxPixel() - accepted.get(j).getxPixel()) > 4) && (Math.abs(potentialWholeNotes.get(i).getyPixel() - accepted.get(j).getyPixel()) > 4))){
 							accepted.add(potentialWholeNotes.get(i));
-							currentScore.symbolImage.setRGB(potentialWholeNotes.get(j).xPixel, potentialWholeNotes.get(j).yPixel, Color.BLUE.getRGB());
+							currentScore.symbolImage.setRGB(potentialWholeNotes.get(i).xPixel, potentialWholeNotes.get(i).yPixel, Color.BLUE.getRGB());
 							this.numberOfWholeNoteHeads++;
 						}
 				}
@@ -270,6 +270,9 @@ public class Symbol {
 					averageXs = averageXs + noteHeadGroups.get(i).get(j).xPixel;
 					divider++;
 				}
+				if(divider == 0) {
+					divider = 1;
+				}
 				averageYs = averageYs / divider;
 				averageXs = averageXs / divider;
 				centerPixels.add(new Pixel(averageXs, averageYs,true));
@@ -291,38 +294,37 @@ public class Symbol {
 			
 			if(!stemsUp){
 				for(int i=0;i<centerPixels.size()-1;i++){
-					int midDistance = (int)Math.abs(centerPixels.get(i).xPixel - centerPixels.get(i+1).xPixel)/2;
+					int midDistance = (int)Math.abs(symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel - symbolStems.get(i+1).getPixels().get(symbolStems.get(i+1).getLineLength()/2).xPixel)/2;
 					boolean inblack = false;
-					for(int j=0;j<this.symbolStems.get(0).getLineLength()*1.3;j++){
-						currentScore.symbolImage.setRGB(centerPixels.get(i).xPixel+midDistance, centerPixels.get(i).yPixel+j, Color.BLUE.getRGB());
-						if(score[centerPixels.get(i).xPixel+midDistance][centerPixels.get(i).yPixel+j].isBlack() && !inblack){
+					for(int j=0;j<this.symbolStems.get(0).getLineLength()*0.6;j++){
+						currentScore.symbolImage.setRGB(symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance, symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel+j, Color.BLUE.getRGB());
+						if(score[symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance][symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel+j].isBlack() && !inblack){
 							inblack = true;
 							numberOfBars++;
-							System.out.println("found black here");
-						}else if(!score[centerPixels.get(i).xPixel+midDistance][centerPixels.get(i).yPixel+j].isBlack()){
+						}else if(!score[symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance][symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel+j].isBlack()){
 							inblack = false;
 						}
 					}
 				}
 			}else{
 				for(int i=0;i<centerPixels.size()-1;i++){
-					int midDistance = (int)Math.abs(centerPixels.get(i).xPixel - centerPixels.get(i+1).xPixel)/2;
+					int midDistance = (int)Math.abs(symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel - symbolStems.get(i+1).getPixels().get(symbolStems.get(i+1).getLineLength()/2).xPixel)/2;
 					boolean inblack = false;
-					for(int j=0;j<this.symbolStems.get(0).getLineLength()*1.3;j++){
-						currentScore.symbolImage.setRGB(centerPixels.get(i).xPixel+midDistance, centerPixels.get(i).yPixel-j, Color.BLUE.getRGB());
+					for(int j=0;j<this.symbolStems.get(0).getLineLength()*0.6;j++){
+						currentScore.symbolImage.setRGB(symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance, symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel-j, Color.BLUE.getRGB());
 						System.out.println("isblack: " + inblack);
-						if(score[centerPixels.get(i).xPixel+midDistance][centerPixels.get(i).yPixel-j].isBlack() && !inblack){
+						if(score[symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance][symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel-j].isBlack() && !inblack){
 							inblack = true;
 							numberOfBars++;
 							System.out.println("found black here");
-						}else if(!score[centerPixels.get(i).xPixel+midDistance][centerPixels.get(i).yPixel-j].isBlack()){
+						}else if(!score[symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).xPixel+midDistance][symbolStems.get(i).getPixels().get(symbolStems.get(i).getLineLength()/2).yPixel-j].isBlack()){
 							inblack = false;
 						}
 					}
 				}
 			}
 			System.out.println("numberOfBars: " + numberOfBars + " centerPixels.size(): " + centerPixels.size());
-			if(numberOfBars == 1){
+			if((numberOfBars+1) == centerPixels.size()){
 				for(int i=0;i<centerPixels.size();i++){
 					this.rhythmNames = this.rhythmNames + "eighth-";
 					int closestPoint = 0;
@@ -400,6 +402,7 @@ public class Symbol {
 				}
 			}
 			String[] vals = ranges.get(closestPoint).split(":");
+			this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(0).xPixel+5, YValue, false), theStem, score, currentScore);
 			this.noteValues = vals[0];
 			this.octaves = vals[1];
 			this.noteHeadYValues = Integer.toString(YValue);
@@ -416,6 +419,7 @@ public class Symbol {
 				}
 			}
 			String[] vals = ranges.get(closestPoint).split(":");
+			this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(theStem.getPixels().size()-1).xPixel+5, YValue, false), theStem, score, currentScore);
 			this.noteValues = vals[0];
 			this.octaves = vals[1];
 			this.noteHeadYValues = Integer.toString(YValue);
@@ -486,14 +490,18 @@ public class Symbol {
 		int blackLeft = 0;
 		int blackRight = 0;
 		int i=0;
-		while(score[noteHead.getxPixel() - i][noteHead.getyPixel()].isBlack()){
+		boolean foundBlackLeft = false;
+		boolean foundBlackRight = false;
+		while(score[noteHead.getxPixel() - i][noteHead.getyPixel()].isBlack() || !foundBlackLeft){
 			//currentScore.symbolImage.setRGB(i, j-movingPixel, Color.ORANGE.getRGB());
+			foundBlackLeft = true;
 			blackLeft++;
 			i++;
 		}
 		i = 0;
-		while(score[noteHead.getxPixel() + i][noteHead.getyPixel()].isBlack()){
+		while(score[noteHead.getxPixel() + i][noteHead.getyPixel()].isBlack() || !foundBlackRight){
 			//currentScore.symbolImage.setRGB(i, j-movingPixel, Color.ORANGE.getRGB());
+			foundBlackRight = true;
 			blackRight++;
 			i++;
 		}

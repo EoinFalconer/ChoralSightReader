@@ -1,5 +1,16 @@
 package openCVImpl;
 
+
+import org.jfugue.integration.MusicXmlParserListener;
+import org.jfugue.parser.Parser;
+import org.jfugue.pattern.Pattern;
+import org.jfugue.player.Player;
+import org.staccato.StaccatoParserListener;
+
+import nu.xom.ParsingException;
+
+import org.jfugue.integration.MusicXmlParser;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
+import javax.xml.parsers.ParserConfigurationException;
 
 
 public class Score {
@@ -16,7 +28,7 @@ public class Score {
 	int spaceHeight;
 	String story = "";
 	String xml = "";
-	public Score(){
+	public Score() {
 		try {
 			symbolImage = ImageIO.read(new File("simple-test.bmp"));
 			testImage = ImageIO.read(new File("simple-test.bmp"));
@@ -248,6 +260,7 @@ public class Score {
 				   parts.add(new Part(partNames[k],"P"+(k+1), (k+1)));
 				   xml = xml + parts.get(k).buildPartListXML();
 			   }
+			   xml = xml + "<part-group type=\"stop\" number=\"1\"/>\n";
 			   xml = xml + "</part-list>";
 			  
 			   for(int k=0;k<choirSystems.size();k++){
@@ -274,6 +287,7 @@ public class Score {
 			       System.err.println("IOException: " + ioe.getMessage());
 			   }
 			   System.out.println("Writing to file");
+			   
 			   
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -22,7 +22,7 @@ public class Part {
 		xml = xml + "<instrument-name>Test</instrument-name>\n";
 		xml = xml + "</score-instrument>\n";
 		xml = xml + "<midi-device id=\""+ partId +"-I1\" port=\"1\"></midi-device>\n";
-		xml = xml + "<midi-instrument id=\""+partId+"-I1\">";
+		xml = xml + "<midi-instrument id=\""+partId+"-I1\">\n";
 		xml = xml + "<midi-channel>" + midiChannel + "</midi-channel>\n";
 		xml = xml + "<midi-program>53</midi-program>\n";
 		xml = xml + "<volume>78.7402</volume>\n";
@@ -57,7 +57,7 @@ public class Part {
 					xml = xml + "\t<attributes>\n";
 					xml = xml + "\t\t<divisions>1</divisions>\n";
 					xml = xml + "\t\t<key>\n";
-					xml = xml + "\t\t\t<fifths>0</fifths>\n";
+					xml = xml + "\t\t\t<fifths>-1</fifths>\n";
 					xml = xml + "\t\t</key>\n";
 					xml = xml + "\t\t<time>\n";
 					xml = xml + "\t\t\t<beats>4</beats>\n";
@@ -73,6 +73,19 @@ public class Part {
 					}
 					xml = xml + "\t\t</clef>\n";
 					xml = xml + "\t</attributes>\n";
+					xml = xml + "<direction placement=\"above\">\n";
+					xml = xml + "<direction-type>\n";
+					xml = xml + "<words default-y=\"40\" font-family=\"Times New Roman\" font-size=\"12\" font-weight=\"bold\">Moderato  </words>\n";
+					xml = xml + "</direction-type>\n";
+					xml = xml + "<direction-type>\n";
+					xml = xml + "<metronome default-y=\"40\" parentheses=\"yes\">\n";
+					xml = xml + "<beat-unit>quarter</beat-unit>\n";
+					xml = xml + "<per-minute>c. 55</per-minute>\n";
+					xml = xml + "</metronome>\n";
+					xml = xml + "</direction-type>\n";
+					xml = xml + "<sound tempo=\"55\"/>\n";
+					xml = xml + "</direction>\n";
+					
 				}
 				for(int k=0;k<currentBar.symbols.size();k++){
 					
@@ -149,6 +162,11 @@ public class Part {
 						//adding in rests
 					}
 				}
+				}
+				if(j == currentStave.bars.size()-1){
+					xml = xml + "<barline location=\"right\">\n";
+					xml = xml + "<bar-style>light-heavy</bar-style>\n";
+					xml = xml + "</barline>\n";
 				}
 				xml = xml + "</measure>\n";
 				barCounter++;
