@@ -30,10 +30,13 @@ public class Symbol {
 	
 	public boolean singleIsDotted;
 	
+	public String multipleDotted = "";
 	
 	private ArrayList<Line> symbolStems = new ArrayList<Line>();
 	
 	private HashMap<Integer,String> ranges;
+	
+	public boolean isADot = false;
 	
 	public Symbol(int sX, int eX, int sY, int eY, int bL, Score currentScore, HashMap<Integer,String> ranges){
 		startX = sX;
@@ -46,8 +49,12 @@ public class Symbol {
 		this.ranges = ranges;
 		System.out.println("------- NEW SYMBOL ------");
 		Pixel[][] score = currentScore.buildArrayFromBitmap(currentScore.symbolImage);
-		
-		detectNoteHeads(currentScore, score);
+		if(!this.hasDot(score, currentScore)){
+			detectNoteHeads(currentScore, score);
+		}else{
+			System.out.println("setting this to be a dot");
+			this.isADot = true;
+		}
 		
 	}
 	public boolean isWholeBarRest(){
@@ -204,7 +211,7 @@ public class Symbol {
 						boolean topCornerRightPresence = false;
 						
 						Pixel topPixel = theStem.getPixels().get((int)Math.floor(theStem.getPixels().size()*0.3));
-						Pixel bottomPixel = theStem.getPixels().get((int)Math.floor(theStem.getPixels().size()*0.9));
+						Pixel bottomPixel = theStem.getPixels().get((int)Math.floor(theStem.getPixels().size()*0.75));
 						for(int i=1;i<currentScore.spaceHeight;i++){
 							currentScore.symbolImage.setRGB(topPixel.getxPixel()+i, topPixel.getyPixel(), Color.PINK.getRGB());
 							currentScore.symbolImage.setRGB(topPixel.getxPixel()-i, topPixel.getyPixel(), Color.RED.getRGB());
@@ -238,10 +245,12 @@ public class Symbol {
 						}
 						if(topPresence && bottomPresence){
 							this.rhythmNames = "eighth";
+							//this.singleIsDotted = this.isDotted(new Pixel(potentialWholeNotes.get(0).xPixel,averageYValue,true), theStem, score, currentScore);
 							System.out.println("QUAVER:" + this.noteValues);
 						}else{
 							this.rhythmNames = "quarter";
-							this.singleIsDotted = this.hasDot(new Pixel(potentialWholeNotes.get(0).xPixel,averageYValue,true) , theStem,score, currentScore);
+							//this.singleIsDotted = this.hasDot(new Pixel(potentialWholeNotes.get(0).xPixel,averageYValue,true) , theStem,score, currentScore);
+							//this.singleIsDotted = this.isDotted(new Pixel(potentialWholeNotes.get(0).xPixel,averageYValue,true), theStem, score, currentScore);
 							System.out.println("CROTCHET: " + this.noteValues);
 						}
 					}
@@ -257,6 +266,12 @@ public class Symbol {
 					noteHeadGroups.get(counter).add(potentialWholeNotes.get(i));
 					counter++;
 					noteHeadGroups.add(new ArrayList<Pixel>());
+				}
+			}
+			
+			for(int i=0;i<noteHeadGroups.size();i++){
+				if(noteHeadGroups.get(i).size() == 0){
+					noteHeadGroups.get(i).add(potentialWholeNotes.get(potentialWholeNotes.size()-1));
 				}
 			}
 			
@@ -344,8 +359,12 @@ public class Symbol {
 					}else{
 						this.noteHeadYValues = this.noteHeadYValues + this.endY + "-";
 					}
-					
+					System.out.println("checking dot for pixel with x:" + centerPixels.get(i).xPixel + " and y:"+ centerPixels.get(i).yPixel);
+					/*if(this.hasDot(centerPixels.get(i), symbolStems.get(i), score, currentScore)){
+						this.multipleDotted = this.multipleDotted + "true-";
+					}*/
 				}
+				//check if this is a semiquaver.
 				System.out.println("this.noteValues: " + this.noteValues + " this.octaves: " + this.octaves);
 			}
 	}
@@ -402,7 +421,7 @@ public class Symbol {
 				}
 			}
 			String[] vals = ranges.get(closestPoint).split(":");
-			this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(0).xPixel+5, YValue, false), theStem, score, currentScore);
+			//this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(0).xPixel+10, YValue, false), theStem, score, currentScore);
 			this.noteValues = vals[0];
 			this.octaves = vals[1];
 			this.noteHeadYValues = Integer.toString(YValue);
@@ -419,7 +438,7 @@ public class Symbol {
 				}
 			}
 			String[] vals = ranges.get(closestPoint).split(":");
-			this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(theStem.getPixels().size()-1).xPixel+5, YValue, false), theStem, score, currentScore);
+			//this.singleIsDotted = this.hasDot(new Pixel(theStem.getPixels().get(theStem.getPixels().size()-1).xPixel, YValue, false), theStem, score, currentScore);
 			this.noteValues = vals[0];
 			this.octaves = vals[1];
 			this.noteHeadYValues = Integer.toString(YValue);
@@ -481,58 +500,131 @@ public class Symbol {
 			return false;
 		}
 	}
-	public boolean hasDot(Pixel noteHead, Line stem, Pixel[][] score, Score currentScore){
+	public boolean isDotted(Pixel noteHead, Line stem, Pixel[][] score, Score currentScore){
 		boolean headOnTop = false;
 		if((int)Math.abs(noteHead.yPixel - stem.getPixels().get(0).getyPixel()) < (stem.getPixels().size()*0.2)){
 			headOnTop = true;
 		}
-		int noteHeadWidth = 0;
-		int blackLeft = 0;
-		int blackRight = 0;
-		int i=0;
-		boolean foundBlackLeft = false;
-		boolean foundBlackRight = false;
-		while(score[noteHead.getxPixel() - i][noteHead.getyPixel()].isBlack() || !foundBlackLeft){
-			//currentScore.symbolImage.setRGB(i, j-movingPixel, Color.ORANGE.getRGB());
-			foundBlackLeft = true;
-			blackLeft++;
-			i++;
-		}
-		i = 0;
-		while(score[noteHead.getxPixel() + i][noteHead.getyPixel()].isBlack() || !foundBlackRight){
-			//currentScore.symbolImage.setRGB(i, j-movingPixel, Color.ORANGE.getRGB());
-			foundBlackRight = true;
-			blackRight++;
-			i++;
-		}
-		noteHeadWidth = blackLeft + blackRight;
-		int amountAccross = noteHeadWidth;
-		int amountUp = (int)Math.floor(noteHeadWidth*1.5);
-		int xStarting = (int)Math.floor(noteHeadWidth*0.7);
-		int amountOfBlack = 0;
+		int startX = 0;
+		int endX = 0;
+		int amountToMoveX = 0;
+		int endY = 0;
+		int startY = 0;
+		int amountToMoveY = 0;
 		if(headOnTop){
-			for(i=0;i<amountUp;i++){
-				for(int j=0;j<amountAccross;j++){
-					if(score[noteHead.xPixel+xStarting+j][noteHead.yPixel-i].isBlack()){
-						currentScore.symbolImage.setRGB(noteHead.xPixel+xStarting+j, noteHead.yPixel-i, Color.GREEN.getRGB());
-						amountOfBlack++;
-					}
-				}
+			Pixel topOfStem = stem.getPixels().get(0);
+			Pixel thirdOfStem = stem.getPixels().get(stem.getPixels().size()/3);
+			int amountToWhite = 0;
+			while(score[topOfStem.xPixel+amountToWhite][topOfStem.yPixel].isBlack){
+				amountToWhite++;
 			}
+			startX = topOfStem.xPixel+amountToWhite+3;
+			endX = startX + (int)(currentScore.spaceHeight*0.5);
+			amountToMoveX = endX - startX;
+			endY = thirdOfStem.yPixel;
+			startY = this.startY;
+			amountToMoveY = endY - startY;
 		}else{
-			xStarting = (int)Math.floor(noteHeadWidth*0.9);
-			for(i=0;i<amountUp;i++){
-				for(int j=0;j<amountAccross;j++){
-					if(score[noteHead.xPixel+xStarting+j][noteHead.yPixel-i].isBlack()){
-						currentScore.symbolImage.setRGB(noteHead.xPixel+xStarting+j, noteHead.yPixel-i, Color.GREEN.getRGB());
-						amountOfBlack++;
+			Pixel thirdOfStem = stem.getPixels().get((int)Math.floor(stem.getPixels().size()*0.66));
+			startX = thirdOfStem.xPixel+3;
+			endX = startX + (int)(currentScore.spaceHeight*0.5);
+			amountToMoveX = endX - startX;
+			endY = this.endY;
+			startY = thirdOfStem.yPixel;
+			amountToMoveY = endY - startY;
+		}
+			int longestVertLine = 0;
+			for(int i=0;i<amountToMoveX;i++){
+				int currentLineLength = 0;
+				for(int j=0;j<amountToMoveY;j++){
+					currentScore.testImage.setRGB(startX+i, startY+j, Color.BLUE.getRGB());
+					if(score[startX+i][startY+j].isBlack()){
+						currentScore.testImage.setRGB(this.startX+i, this.startY+j, Color.GREEN.getRGB());
+						currentLineLength++;
+					}else{
+						if(currentLineLength > longestVertLine){
+							longestVertLine = currentLineLength;
+						}
+						currentLineLength = 0;
 					}
 				}
+				if(currentLineLength > longestVertLine){
+					longestVertLine = currentLineLength;
+				}
 			}
-		}
-			if(amountOfBlack > 2){
+			//check for longest vert line
+			int longestHorLine = 0;
+			for(int i=0;i<amountToMoveY;i++){
+				int currentLineLength = 0;
+				for(int j=0;j<amountToMoveX;j++){
+					if(score[startX+j][startY+i].isBlack()){
+						currentLineLength++;
+					}else{
+						if(currentLineLength > longestHorLine){
+							longestHorLine = currentLineLength;
+						}
+						currentLineLength = 0;
+					}
+				}
+				if(currentLineLength > longestVertLine){
+					longestHorLine = currentLineLength;
+				}
+			}
+			System.out.println("longestVert: " + longestVertLine + "longestHor: " + longestHorLine);
+			if((int)Math.abs(longestVertLine - longestHorLine) < longestHorLine){
+				System.out.println("HAS A DOT");
 				return true;
 			}
+		return false;
+	}
+	public boolean hasDot(Pixel[][] score, Score currentScore){
+		//check for longest vert line
+		System.out.println("this.symbolWidth: " + this.symbolWidth +" must be greater than " + currentScore.spaceHeight*0.2 + " and less than " + currentScore.spaceHeight*1.5);
+		if(this.symbolWidth > (currentScore.spaceHeight*0.2)){System.out.println("passes one");}
+		if(this.symbolWidth < (currentScore.spaceHeight*1.3)){System.out.println("passes two");}
+		if((this.symbolWidth > (currentScore.spaceHeight*0.2)) && (this.symbolWidth < (currentScore.spaceHeight*1.5))){
+			System.out.println("in the right place");
+			int longestVertLine = 0;
+			for(int i=0;i<this.symbolWidth;i++){
+				int currentLineLength = 0;
+				for(int j=0;j<this.symbolHeight;j++){
+					if(score[this.startX+i][this.startY+j].isBlack()){
+						//currentScore.testImage.setRGB(this.startX+i, this.startY+j, Color.GREEN.getRGB());
+						currentLineLength++;
+					}else{
+						if(currentLineLength > longestVertLine){
+							longestVertLine = currentLineLength;
+						}
+						currentLineLength = 0;
+					}
+				}
+				if(currentLineLength > longestVertLine){
+					longestVertLine = currentLineLength;
+				}
+			}
+			//check for longest vert line
+			int longestHorLine = 0;
+			for(int i=0;i<this.symbolHeight;i++){
+				int currentLineLength = 0;
+				for(int j=0;j<this.symbolWidth;j++){
+					if(score[this.startX+j][this.startY+i].isBlack()){
+						currentLineLength++;
+					}else{
+						if(currentLineLength > longestHorLine){
+							longestHorLine = currentLineLength;
+						}
+						currentLineLength = 0;
+					}
+				}
+				if(currentLineLength > longestHorLine){
+					longestHorLine = currentLineLength;
+				}
+			}
+			System.out.println("longestVert: " + longestVertLine + "longestHor: " + longestHorLine);
+			if((int)Math.abs(longestVertLine - longestHorLine) <= longestHorLine){
+				return true;
+			}
+		}
 		return false;
 	}
 }

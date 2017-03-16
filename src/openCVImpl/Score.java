@@ -17,8 +17,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.xml.parsers.ParserConfigurationException;
 
 
@@ -85,7 +87,7 @@ public class Score {
 		    System.out.println("number of lines: " + lines.size());
 			   ArrayList<Line> staffLines = new ArrayList<Line>();
 			   for(int k=0;k<lines.size();k++){
-			    	if(lines.get(k).getLineLength() > maxLine * 0.9){
+			    	if(lines.get(k).getLineLength() > maxLine * 0.85){
 			    		//set which pixels belong to barlines.
 			    		for(int l=0;l<lines.get(k).getPixels().size();l++){
 			    			lines.get(k).getPixels().get(l).setIsBarLine(true);
@@ -99,7 +101,11 @@ public class Score {
 				    	}
 				    }
 			    }
-			   
+			   for(int k=0;k<staffLines.size();k++){
+				   for(int l=0;l<staffLines.get(k).pixels.size();l++){
+					   this.testImage.setRGB(staffLines.get(k).getPixels().get(l).xPixel, staffLines.get(k).getPixels().get(l).yPixel, Color.BLUE.getRGB());
+				   }
+			   }
 			   /*
 			    * 	Group the Lines into staves
 			    */
@@ -148,7 +154,8 @@ public class Score {
 			   ArrayList<Line> currentGroup = new ArrayList<Line>();
 			   currentGroup.add(staffLines.get(0));
 			   for(int k=1;k<staffLines.size();k++){
-					  if(staffLines.get(k).blackLineLength == currentLength){
+				   	//System.out.println("blackLineLength: " + staffLines.get(k).blackLineLength);
+					  if(staffLines.get(k).blackLineLength == currentLength || (int)Math.abs(staffLines.get(k).blackLineLength - currentLength) == 1){
 						  currentGroup.add(staffLines.get(k));
 						  //System.out.println("size: " + currentGroup.size());
 					  }else{
@@ -165,11 +172,11 @@ public class Score {
 			   if(groupHolder.size() == 0){
 				   groupHolder.add(currentGroup);
 			   }
+			   System.out.println("groupSize.size(): " + groupHolder.size());
 			   /*
 			    * Error correction on the choir part.
 			    */
 			   ArrayList<Stave> choirStaves = new ArrayList<Stave>();
-			   ArrayList<SystemGroup> choirSystems = new ArrayList<SystemGroup>();
 			   for(int k=0;k<groupHolder.size();k++){
 				   if(groupHolder.get(k).size() >= 5){ //size of the group is bigger than one stave
 					   Line topOfGroup = groupHolder.get(k).get(0);
@@ -189,14 +196,44 @@ public class Score {
 					   // we can assume that all of the staves in the middle of the top and bottom will be also choir staves
 					   //System.out.println("topIndex: " + topStaveIndex);
 					   //System.out.println("bottomIndex: " + bottomStaveIndex);
-					   SystemGroup currentSystem = new SystemGroup(array2D);
 					   for(int count=topStaveIndex;count<=bottomStaveIndex;count++){
 						   choirStaves.add(staves.get(count));
-						   currentSystem.staves.add(staves.get(count));
 					   }
-					   choirSystems.add(currentSystem);
 				   }
 			   }
+			   int minDifference = this.symbolImage.getHeight();
+			   int maxDifference = 0;
+			   for(int k=0;k<choirStaves.size()-1;k++){
+				   int currentStaveBottomY = choirStaves.get(k).staffLines.get(choirStaves.get(k).staffLines.size()-1).getInitialY();
+				   int nextStaveTopY = choirStaves.get(k+1).staffLines.get(0).getInitialY();
+				   int difference = (int)Math.abs(currentStaveBottomY - nextStaveTopY);
+				   if(difference < minDifference){
+					   minDifference = difference;
+				   }
+				   if(difference > maxDifference){
+					   maxDifference = difference;
+				   }
+			   }
+			   ArrayList<SystemGroup> choirSystems = new ArrayList<SystemGroup>();
+			   SystemGroup currentSystem = new SystemGroup(array2D);
+			   for(int k=0;k<choirStaves.size()-1;k++){
+				   int currentStaveBottomY = choirStaves.get(k).staffLines.get(choirStaves.get(k).staffLines.size()-1).getInitialY();
+				   int nextStaveTopY = choirStaves.get(k+1).staffLines.get(0).getInitialY();
+				   int difference = (int)Math.abs(currentStaveBottomY - nextStaveTopY);
+				   int differenceFromMax = (int)Math.abs(maxDifference - difference);
+				   int differenceFromMin = (int)Math.abs(minDifference - difference);
+				   if(differenceFromMax < differenceFromMin){
+					   currentSystem.staves.add(choirStaves.get(k));
+					   choirSystems.add(currentSystem);
+					   currentSystem = new SystemGroup(array2D);
+				   }else{
+					   currentSystem.staves.add(choirStaves.get(k));
+				   }
+			   }
+			   currentSystem.staves.add(choirStaves.get(choirStaves.size()-1));
+			   choirSystems.add(currentSystem);
+			   System.out.println("choirSystems.size(): " + choirSystems.size());
+			   System.out.println("choirStaves.size(): " + choirStaves.size());
 			   /*
 			    * Find the clefs in the systems.
 			    */
@@ -255,9 +292,8 @@ public class Score {
 			   }
 			   int systemSize = choirSystems.get(0).staves.size();
 			   ArrayList<Part> parts = new ArrayList<Part>();
-			   String[] partNames = {"Soprano", "Alto", "Tenor", "Bass"};
 			   for(int k=0;k<systemSize;k++){
-				   parts.add(new Part(partNames[k],"P"+(k+1), (k+1)));
+				   parts.add(new Part("Part "+(k+1) ,"P"+(k+1), (k+1)));
 				   xml = xml + parts.get(k).buildPartListXML();
 			   }
 			   xml = xml + "<part-group type=\"stop\" number=\"1\"/>\n";
@@ -339,7 +375,15 @@ public class Score {
 	}
 	
 	public static void main(String[] args){
+		final JFileChooser fc = new JFileChooser();
+		long startTime = System.currentTimeMillis();
 		Score score = new Score();
+		long endTime   = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+	            TimeUnit.MILLISECONDS.toMinutes(totalTime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalTime)),
+	            TimeUnit.MILLISECONDS.toSeconds(totalTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalTime)));
+		System.out.println("Total Run Time: " + hms);
 	}
 	
 }

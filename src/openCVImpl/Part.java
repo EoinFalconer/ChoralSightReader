@@ -80,10 +80,10 @@ public class Part {
 					xml = xml + "<direction-type>\n";
 					xml = xml + "<metronome default-y=\"40\" parentheses=\"yes\">\n";
 					xml = xml + "<beat-unit>quarter</beat-unit>\n";
-					xml = xml + "<per-minute>c. 55</per-minute>\n";
+					xml = xml + "<per-minute>c. 80</per-minute>\n";
 					xml = xml + "</metronome>\n";
 					xml = xml + "</direction-type>\n";
-					xml = xml + "<sound tempo=\"55\"/>\n";
+					xml = xml + "<sound tempo=\"80\"/>\n";
 					xml = xml + "</direction>\n";
 					
 				}
@@ -94,6 +94,9 @@ public class Part {
 						xml = xml + "<note default-x=\""+currentSymbol.startX+"\" default-y=\""+-25.00+"\">\n";
 						xml = xml + "<pitch>\n";
 						xml = xml + "<step>" + currentSymbol.noteValues + "</step>\n";
+						if(currentSymbol.noteValues.equals("B")){
+							xml = xml + "<alter>-1</alter>";
+						}
 						xml = xml + "<octave>"+currentSymbol.octaves+"</octave>\n";
 						xml = xml + "</pitch>\n";
 						
@@ -111,8 +114,10 @@ public class Part {
 						}else{
 							xml = xml + "<type>quarter</type>\n";
 						}
-						if(currentSymbol.singleIsDotted){
-							xml = xml + "<dot/>\n";
+						if(k < currentBar.symbols.size()-1){
+							if(currentBar.symbols.get(k+1).isADot){
+								xml = xml + "<dot/>\n";
+							}
 						}
 						if(Integer.parseInt(currentSymbol.noteHeadYValues) > currentStave.midPoint){
 							xml = xml + "<stem>up</stem>\n";
@@ -134,6 +139,9 @@ public class Part {
 							xml = xml + "<note default-x=\""+currentSymbol.startX+"\" default-y=\""+-25.00+"\">\n";
 							xml = xml + "<pitch>\n";
 							xml = xml + "<step>" + noteValues[l] + "</step>\n";
+							if(noteValues[l].equals("B")){
+								xml = xml + "<alter>-1</alter>";
+							}
 							xml = xml + "<octave>"+ octaves[l] +"</octave>\n";
 							xml = xml + "</pitch>\n";
 							xml = xml + "<duration>1</duration>\n";
@@ -173,5 +181,8 @@ public class Part {
 			}
 		}
 		return xml;
+	}
+	public void buildPartXMLFile(){
+		
 	}
 }
